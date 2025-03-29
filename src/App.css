@@ -1,0 +1,129 @@
+/* Ban List Styles */
+.ban-list {
+  width: 100%;
+  max-width: 800px;
+  margin: 10px 0;
+  padding: 15px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.ban-list ul {
+  list-style-type: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ban-item {
+  background-color: #e74c3c;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.ban-item:hover {
+  background-color: #c0392b;
+}
+
+/* Clickable Attributes */
+.clickable-attribute {
+  color: #3498db;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.3s;
+}
+
+.clickable-attribute:hover {
+  color: #2980b9;
+}
+
+/* History Styles */
+.history-section {
+  width: 100%;
+  max-width: 800px;
+  margin: 20px 0;
+  padding: 15px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.history-item {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  transition: transform 0.3s;
+}
+
+.history-item:hover {
+  transform: scale(1.05);
+}
+
+.history-image {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+  .history-section,
+  .ban-list,
+  .artwork-container {
+    max-width: 95%;
+  }
+  
+  .history-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+}
+
+/* Add this to your App.css file */
+body {
+  background-color: #A51C30;
+  color: white;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1, h2 {
+  color: white;
+}
+
+/* Style the containers to stand out against the red background */
+.artwork-container, .ban-list, .history-section {
+  background-color: white;
+  color: #333;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.artwork-container h2, .ban-list h2, .history-section h2 {
+  color: #A51C30;
+}

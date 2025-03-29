@@ -1,38 +1,74 @@
-import React, { useState, useEffect } from 'react';
-import ArtworkCard from './components/ArtworkCard';
-import BanList from './components/BanList';
-import DiscoverButton from './components/DiscoverButton';
-import HistoryGrid from './components/HistoryGrid';
-import { fetchRandomArtwork } from './services/artService';
-import './styles/App.css';
+import { useState } from 'react'
+import './App.css'
 
 function App() {
-  // State variables
   const [artwork, setArtwork] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [banList, setBanList] = useState([]);
   const [history, setHistory] = useState([]);
+  
+  // Replace with your actual Harvard Art Museums API key
+  const apiKey = '8b6eae4f-b722-4f23-8d9a-3981ad255873';
 
-  // Function to get a new artwork
-  const handleDiscover = async () => {
-    setIsLoading(true);
+  const fetchArtwork = async () => {
+    setLoading(true);
     setError(null);
-
+    
     try {
-      const newArtwork = await fetchRandomArtwork(banList);
+      // Get a random page number
+      const randomPage = Math.floor(Math.random() * 100) + 1;
       
-      if (newArtwork) {
-        setArtwork(newArtwork);
-        setHistory(prevHistory => [...prevHistory, newArtwork]);
+      // Create URL with query parameters
+      let url = `https://api.harvardartmuseums.org/object?apikey=${apiKey}&size=1&page=${randomPage}&hasimage=1`;
+      
+      // Add ban list parameters to URL
+      banList.forEach(ban => {
+        const [type, value] = ban.split(':');
+        if (type === 'culture') {
+          url += `&culture=${encodeURIComponent(value === 'Unidentified' ? 'Unidentified' : `!${value}`)}`;
+        } else if (type === 'technique') {
+          url += `&technique=${encodeURIComponent(value === 'Unidentified' ? 'Unidentified' : `!${value}`)}`;
+        } else if (type === 'period') {
+          url += `&period=${encodeURIComponent(value === 'Unidentified' ? 'Unidentified' : `!${value}`)}`;
+        }
+      });
+      
+      console.log('Fetching from:', url);
+      
+      // Make API call
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data && data.records && data.records.length > 0) {
+        const newArtwork = data.records[0];
+        
+        // Check if this artwork should be banned
+        const shouldBeBanned = banList.some(ban => {
+          const [type, value] = ban.split(':');
+          return (
+            (type === 'culture' && newArtwork.culture === value) ||
+            (type === 'technique' && newArtwork.technique === value) ||
+            (type === 'period' && newArtwork.period === value)
+          );
+        });
+        
+        if (shouldBeBanned) {
+          // If the artwork should be banned, try again
+          fetchArtwork();
+        } else {
+          // Set the artwork and add to history
+          setArtwork(newArtwork);
+          setHistory(prevHistory => [...prevHistory, newArtwork]);
+        }
       } else {
         setError('Could not find artwork. Try relaxing your ban list.');
       }
     } catch (err) {
-      setError('Error fetching artwork. Please try again.');
+      setError('Error fetching artwork: ' + err.message);
       console.error('Error fetching artwork:', err);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -49,34 +85,112 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Art Discovery</h1>
-        <p>Discover random artworks from the Harvard Art Museums. Click on attributes to ban them from future results.</p>
-        
-        <DiscoverButton 
-          onClick={handleDiscover} 
-          isLoading={isLoading} 
-        />
-        
-        {error && <p className="error">{error}</p>}
-        
-        <BanList 
-          banList={banList} 
-          onRemove={removeFromBanList} 
-        />
-        
-        {artwork && (
-          <ArtworkCard 
-            artwork={artwork} 
-            onAddToBan={addToBanList} 
-          />
+    <div className="app-container">
+      <h1>Harvard Art Discovery</h1>
+      <p>Discover random artworks. Click on attributes to ban them from future results.</p>
+      
+      <button 
+        onClick={fetchArtwork} 
+        disabled={loading}
+        className="discover-button"
+      >
+        {loading ? 'Loading...' : 'Discover New Artwork'}
+      </button>
+      
+      {error && <p className="error-message">{error}</p>}
+      
+      {/* Ban List Section */}
+      <div className="ban-list">
+        <h2>Ban List</h2>
+        {banList.length === 0 ? (
+          <p>No attributes banned yet. Click on any attribute below to ban it.</p>
+        ) : (
+          <ul>
+            {banList.map((ban, index) => {
+              const [type, value] = ban.split(':');
+              return (
+                <li key={index} onClick={() => removeFromBanList(ban)} className="ban-item">
+                  <strong>{type}:</strong> {value} (click to remove)
+                </li>
+              );
+            })}
+          </ul>
         )}
-        
-        <HistoryGrid history={history} />
-      </header>
+      </div>
+      
+      {/* Artwork Display */}
+      {artwork && (
+        <div className="artwork-container">
+          <h2>{artwork.title || 'Untitled'}</h2>
+          
+          {artwork.primaryimageurl && (
+            <img 
+              src={artwork.primaryimageurl} 
+              alt={artwork.title || 'Artwork'} 
+              className="artwork-image"
+            />
+          )}
+          
+          <div className="artwork-details">
+            <p>
+              <strong>Culture: </strong>
+              <span 
+                onClick={() => addToBanList('culture', artwork.culture || 'Unidentified')}
+                className="clickable-attribute"
+              >
+                {artwork.culture || 'Unidentified'}
+              </span>
+            </p>
+            
+            <p>
+              <strong>Technique: </strong>
+              <span 
+                onClick={() => addToBanList('technique', artwork.technique || 'Unidentified')}
+                className="clickable-attribute"
+              >
+                {artwork.technique || 'Unidentified'}
+              </span>
+            </p>
+            
+            <p>
+              <strong>Period: </strong>
+              <span 
+                onClick={() => addToBanList('period', artwork.period || 'Unidentified')}
+                className="clickable-attribute"
+              >
+                {artwork.period || 'Unidentified'}
+              </span>
+            </p>
+            
+            <p><strong>Date: </strong>{artwork.dated || 'Unknown'}</p>
+          </div>
+        </div>
+      )}
+      
+      {/* History Section */}
+      <div className="history-section">
+        <h2>History</h2>
+        {history.length === 0 ? (
+          <p>No history yet. Click the Discover button to see artworks.</p>
+        ) : (
+          <div className="history-grid">
+            {history.map((item, index) => (
+              <div key={index} className="history-item">
+                {item.primaryimageurl && (
+                  <img 
+                    src={item.primaryimageurl} 
+                    alt={item.title || 'Artwork'} 
+                    className="history-image"
+                  />
+                )}
+                <p>{item.title || 'Untitled'}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
