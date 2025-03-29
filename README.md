@@ -46,9 +46,9 @@ The following **additional** features are implemented:
 
 Here's a walkthrough of implemented user stories:
 
+https://github.com/user-attachments/assets/56e3542f-12f2-4faa-994f-78a8728d2b42
 
 
-https://github.com/user-attachments/assets/282555a8-e346-4805-99c1-2bf6cd6b4e23
 
 
 
